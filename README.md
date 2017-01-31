@@ -1,2 +1,5 @@
 # snc
 snc is a simplified version of netcat written in C using Unix sockets
+
+### About:
+The program runs a simplified version of netcat, providing options which match the behavior of traditional netcat. It supports starting either a server or client with the -l flag, running in TCP or UDP mode with the -u flag, and specifying a source address when running as the client. It is capable of resolving hostnames to IP addresses, and can handle any correct ordering of arguments on the command line. The buffer used by both the send and receive threads is 4096 characters long, resulting in any message beyonf 4096 characters to de truncated, similar to netcat's behavior on many popular linux distros. Similar to netcat, when running in TCP mode ctrl^c (and for our purposes ctrl^d) terminate both the server and client side of the connection When running in UDP mode, it only terminates the side the signal was on, opening up the possibility of both a reconnection and a termination due to too many send attempts with no receiver.
