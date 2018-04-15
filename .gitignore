@@ -1,10 +1,13 @@
+# Project-specific files/folders
+snc
+
 # Object files
 *.o
 *.ko
 *.obj
 *.elf
 
-# Precompiled Headers
+# Precompiled headers
 *.gch
 *.pch
 
@@ -14,7 +17,7 @@
 *.la
 *.lo
 
-# Shared objects (inc. Windows DLLs)
+# Shared objects
 *.dll
 *.so
 *.so.*
@@ -27,7 +30,3 @@
 *.i*86
 *.x86_64
 *.hex
-
-# Debug files
-*.dSYM/
-*.su

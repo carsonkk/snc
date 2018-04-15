@@ -1,5 +1,28 @@
 # snc
-snc is a simplified version of netcat written in C using Unix sockets
+> A (simplified) implementation of netcat
 
-### About:
-The program runs a simplified version of netcat, providing options which match the behavior of traditional netcat. It supports starting either a server or client with the -l flag, running in TCP or UDP mode with the -u flag, and specifying a source address when running as the client. It is capable of resolving hostnames to IP addresses, and can handle any correct ordering of arguments on the command line. The buffer used by both the send and receive threads is 4096 characters long, resulting in any message beyonf 4096 characters to de truncated, similar to netcat's behavior on many popular linux distros. Similar to netcat, when running in TCP mode ctrl^c (and for our purposes ctrl^d) terminate both the server and client side of the connection When running in UDP mode, it only terminates the side the signal was on, opening up the possibility of both a reconnection and a termination due to too many send attempts with no receiver.
+## About
+
+This program is an attempt at a faithful, albeit briefer, implementation of the networking utility `netcat`. It provides a subset of the flags and features available in the real netcat, outlined further in `doc/`, and relies on 0 dependencies outside of "standard" libraries (where the word standard is used pretty loosely since it tends to mean different things to different people in the C community...). To learn more on netcat in general, check out the [man page](https://man.openbsd.org/nc), the [Wikipedia page](https://en.wikipedia.org/wiki/Netcat), or pretty much [any article online](https://www.google.com/search?q=netcat).
+
+## Getting Started
+
+#### Linux (Ubuntu)
+
+1. Clone the repo and build the project
+```bash
+git clone git@github.com:carsonkk/snc.git
+cd snc/
+make
+```
+2. To test by example, try out the `hello world` of netcat by getting a server and client communicating with each other locally:
+```bash
+# Start a TCP server listening on port 8080
+./snc -l 8080
+
+# In a different Terminal tab, start a TCP client and have it connect to port 8080 on localhost
+./snc localhost 8080
+
+# Try typing something into one instance and make sure it "cat's" it to the other
+```
+3. Checkout `doc/` for exactly which options are supported or `example/` for various useful netcat command combinations that are supported

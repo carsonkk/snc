@@ -1,24 +1,35 @@
-TARGET=snc
-CC=gcc
-CFLAGS=-g -Wall
-LIBS=-pthread
+ROOT = .
 
-.PHONY: default all clean
+# Source code
+SRC_DIR = $(ROOT)/src
+INCL_DIR = $(ROOT)/include
 
-default: $(TARGET)
-all: default
+# Libraries and dependencies
+LIBS = -pthread
+INCLS = -I $(INCL_DIR)
 
-OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c))
-HEADERS = $(wildcard *.h)
+# Testing
+TEST_DIR = $(ROOT)/test
 
-%.o: %.c $(HEADERS)
+# Executables
+TARGET = $(ROOT)/snc
+all: $(TARGET)
+
+# Compilation options
+CC = gcc
+CFLAGS_WARN = -Wall
+CFLAGS_DEBUG = -g
+CFLAGS = $(CFLAGS_WARN) $(CFLAGS_DEBUG) $(INCLS)
+HEADERS = $(wildcard **/*.h)
+OBJECTS = $(patsubst %.c,%.o,$(wildcard **/*.c))
+
+%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-.PRECIOUS: $(TARGET) $(OBJECTS)
-
 $(TARGET): $(OBJECTS)
-	$(CC) $(OBJECTS) -Wall $(LIBS) -o $@
+	$(CC) $(OBJECTS) $(CFLAGS_WARN) $(LIBS) -o $@
 
 clean:
-	-rm -f *.o
-	-rm -f $(TARGET)
+	-rm -f **/*.o $(TARGET)
+
+.PHONY: clean all
