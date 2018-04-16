@@ -1,9 +1,5 @@
 #include "server.h"
 
-#define SERVICE "http"
-#define MAX_BACKLOG 512
-
-
 /*
  * Spawns a netcat instance as a server
  */
@@ -23,73 +19,30 @@ int Server(options_t opts) {
   comm_rets_t *commRets;
 
   // Open a socket
-  serverFd = socket(opts->domain, opts->type, opts->protocol);
-  if(serverFd < 0) {
-    ErrorHandler(__FILE__, __FUNCTION__, __LINE__, 
-      "Server failed to open a new socket file descriptor");
+  serverFd = OpenSocket(opts->domain, opts->type, opts->protocol);
+  if(serverFd == -1) {
     return -1;
   }
 
   // Allow immediate address reuse
-  err = setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optVal , optLen);
+  setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optVal , optLen);
 
   // Configure the socket as a server socket
-  memset((char *)&serverAddr, 0, serverAddrLen);
-  serverAddr.sin_family = opts->domain;
-  serverAddr.sin_port = htons(opts->port);
-  if(opts->hostname == NULL) {
-    serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-  }
-  else {
-    serverAddr.sin_addr.s_addr = inet_addr(opts->hostname);
-
-    // If this initially fails, attempt to resolve
-    if(serverAddr.sin_addr.s_addr == -1) {
-      struct addrinfo *infoHints;
-      struct addrinfo **infoRes;
-      struct addrinfo **i;
-      struct sockaddr_in *hostAddr;
-      char *newHostname;
-
-      memset(&infoList, 0, sizeof(infoList));
-      infoList.ai_family = opts->domain;
-      infoList.ai_socktype = opts->type;
-      err = getaddrinfo(opts->hostname, SERVICE, infoHints, infoRes);
-      if(err != 0) {
-        ErrorHandler(__FILE__, __FUNCTION__, __LINE__, 
-          "Server failed while attempting to resolve the hostname");
-        return -1;
-      }
-      for(i = infoRes; i != NULL; i = i->ai_next) {
-        hostAddr = (struct sockaddr_in *)i->ai_addr;
-        newHostname = &(inet_ntoa(hostAddr->sin_addr));
-      }
-      serverAddr.sin_addr.s_addr = inet_addr(newHostname);
-      freeaddrinfo(infoRes);
-      // TODO: Error handling needed here?
-    }
+  err = ConfigureSocket(&serverAddr, &serverAddrLen, opts->hostname, opts->port, opts->domain, opts->type);
+  if(err == -1) {
+    return -1;
   }
 
   // Bind to a port on the server
-  err = bind(serverFd, (struct sockaddr *)&serverAddr, &serverAddrLen);
-  if(err != 0) {
-    ErrorHandler(__FILE__, __FUNCTION__, __LINE__, 
-      "Server failed to bind the chosen port");
+  err = BindSocket(serverFd, &serverAddr, &serverAddrLen);
+  if(err == -1) {
     return -1;
   }
 
   // Listen for and accept any connections
   if(opts->protocol == IPPROTO_TCP) {
-    err = listen(serverFd, MAX_BACKLOG);
-    if(err != 0) {
-      ErrorHandler(__FILE__, __FUNCTION__, __LINE__, 
-        "Server failed to listen for any incoming connections");
-      return -1;
-    }
-    clientFd = accept(serverFd, (struct sockaddr *)&clientAddr, &clientAddrLen);
-    if(clientFd < 0) {
-      ErrorHandler(__FILE__, __FUNCTION__, __LINE__, 
-        "Server failed to accept an incoming connection from a client");
+    clientFd = AcceptConnection(serverFd, &clientAddr, &clientAddrLen);
+    if(clientFd == -1) {
       return -1;
     }
   }
@@ -112,7 +65,6 @@ int Server(options_t opts) {
       "Server failed to spawn the \"send\" communication thread");
     return -1;
   }
-
   err = pthread_create(&recvId, NULL, RecvThread, (void *)commArgs);
   if(err != 0) {
     ErrorHandler(__FILE__, __FUNCTION__, __LINE__, 
@@ -128,7 +80,6 @@ int Server(options_t opts) {
       "Server failed to join the \"send\" communication thread");
     return -1;
   }
-
   // TODO: Check connection end state here
   if(sendRet != 0) {
     pthread_cancel(recvId);
@@ -151,14 +102,12 @@ int Server(options_t opts) {
 
   // Close socket connection
   if(opts->protocol == IPPROTO_TCP) {
-    err = close(clientFd);
+    err = CloseSocket(clientFd);
   }
   else {
-    err = close(serverFd);
+    err = CloseSocket(serverFd);
   }
-  if(err < 0) {
-    ErrorHandler(__FILE__, __FUNCTION__, __LINE__, 
-      "Server failed to close the socket");
+  if(err == -1) {
     return -1;
   }
 
