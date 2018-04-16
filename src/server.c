@@ -47,7 +47,7 @@ int Server(options_t opts) {
     if(serverAddr.sin_addr.s_addr == -1) {
       struct addrinfo *infoHints;
       struct addrinfo **infoRes;
-      struct addrinfo **infoResItem;
+      struct addrinfo **i;
       struct sockaddr_in *hostAddr;
       char *newHostname;
 
@@ -60,13 +60,12 @@ int Server(options_t opts) {
           "Server failed while attempting to resolve the hostname");
         return -1;
       }
-      for(infoResItem = infoRes; infoResItem != NULL; infoResItem = infoResItem->ai_next) {
-        hostAddr = (struct sockaddr_in *)infoResItem->ai_addr;
+      for(i = infoRes; i != NULL; i = i->ai_next) {
+        hostAddr = (struct sockaddr_in *)i->ai_addr;
         newHostname = &(inet_ntoa(hostAddr->sin_addr));
       }
       serverAddr.sin_addr.s_addr = inet_addr(newHostname);
       freeaddrinfo(infoRes);
-      free(newHostname);
       // TODO: Error handling needed here?
     }
   }
@@ -105,7 +104,7 @@ int Server(options_t opts) {
   }
   commArgs->protocol = opts->protocol;
   commArgs->udpAddr = (struct sockaddr *)&clientAddr;
-  commArgs->udpAddrLen = &clientAddrLen
+  commArgs->udpAddrLen = &clientAddrLen;
 
   err = pthread_create(&sendId, NULL, SendThread, (void *)commArgs);
   if(err != 0) {
@@ -149,7 +148,7 @@ int Server(options_t opts) {
   if(sendRet != 0 || recvRet != 0) {
     return -1;
   }
-  
+
   // Close socket connection
   if(opts->protocol == IPPROTO_TCP) {
     err = close(clientFd);

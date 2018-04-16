@@ -16,7 +16,6 @@
 
 #include "global.h"
 
-
 typedef struct {
   int sockFd;
   int protocol;
@@ -31,7 +30,3 @@ void *SendThread(void *args);
 void *RecvThread(void *args);
 
 #endif
-
-
-
-

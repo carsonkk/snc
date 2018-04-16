@@ -17,13 +17,6 @@
 #include "global.h"
 #include "communication.h"
 
-typedef struct {
-  int sock_fd;
-  int isUdp;
-  struct sockaddr_in *udp_addr;
-  socklen_t *udp_addr_len;
-} server_t;
-
 int Server(options_t opts);
 
 #endif
